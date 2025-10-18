@@ -8,14 +8,16 @@ b = np.array([442, 442, 457, 431, 471, 463, 434, 487, 480, 480, 470, 430, 489, 4
 
 def compute_z_scores(data, ddof=0):
     mean = np.mean(data)
-    std_dev = np.std(data)
+    std_dev = np.std(data, ddof=ddof)
     z_scores = (data - mean) / std_dev
     return z_scores
 
 # Initialize empty lists for z-scores. These will hold the standardized/tranformed data points
-x = compute_z_scores(a, ddof = 0).tolist()
-y = compute_z_scores(b, ddof = 0).tolist()
+x_arr = compute_z_scores(a, ddof = 1)
+y_arr = compute_z_scores(b, ddof = 1)
+x_list = x_arr.tolist()
+y_list = y_arr.tolist()
 
-print(x)
-print(y)
+print(x_list)
+print(y_list)
 
