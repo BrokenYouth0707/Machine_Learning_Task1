@@ -46,13 +46,16 @@ def run_grad_des(point, study_rate):
     P_prev = point
     P_cur  = [0.0] * len(point)
     J_prev = 0
+   
+    global J
+    J.append(cost_func(point))
     i = 0
     while True:
         assert P_prev != None
 
         P_cur = run_grad_des_once(P_prev, study_rate) 
         J_cur = cost_func(P_cur)
-
+        J.append(J_cur) 
         # Record theta to plot pictures
         if i < 3:
             th_rec.append(P_cur)
@@ -92,6 +95,7 @@ epsilon        = 0
 # Record theta after first, second and third iterations.
 th_rec = []
 
+J = []
 def main():
     global sample_x
     global sample_y
@@ -124,6 +128,16 @@ def main():
     plot_pic(th_rec[1])
     plot_pic(th_rec[2])
     plot_pic(P) 
+
+    # Plot cost's varation
+    iterations = range(1, len(J) + 1) 
+    
+    plt.plot(iterations, J, marker='o')
+    plt.xlabel('Iteration')
+    plt.ylabel('Cost J(θ)')
+    plt.title('Cost Function over Iterations')
+    plt.grid(True)
+    plt.show()
 if __name__ == "__main__":
     main()
 
