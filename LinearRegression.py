@@ -46,15 +46,43 @@ def run_grad_des(point, study_rate):
     P_prev = point
     P_cur  = [0.0] * len(point)
     J_prev = 0
+    i = 0
     while True:
         assert P_prev != None
 
         P_cur = run_grad_des_once(P_prev, study_rate) 
         J_cur = cost_func(P_cur)
+
+        # Record theta to plot pictures
+        if i < 3:
+            th_rec.append(P_cur)
+
         if abs(J_prev - J_cur) < epsilon:
             return P_cur
         P_prev = P_cur
         J_prev = J_cur
+        i+=1
+
+def plot_pic(P):
+    x_min = min(DataPoints.x)
+    x_max = max(DataPoints.x)
+    
+    x_line = [x_min + i*(x_max - x_min)/100 for i in range(101)]
+    y_line = [h([1,xi], P) for xi in x_line]
+
+    plt.scatter(DataPoints.x, sample_y, color='blue', label='Data Points')   
+    plt.plot(x_line, y_line, color='red', label='Regression Line')   
+ #   plt.xlabel("x")
+ #   plt.ylabel("y")
+    plt.gca().xaxis.set_major_locator(plt.MultipleLocator(1))  
+    plt.gca().yaxis.set_major_locator(plt.MultipleLocator(1)) 
+    plt.gca().set_xlim(-2, 2) 
+    plt.gca().set_ylim(-2, 2)
+    plt.title("Linear Regression")
+
+    plt.legend()
+    plt.show()
+ 
 sample_x = []
 sample_y = []
 sample_number  = 0
@@ -91,28 +119,11 @@ def main():
     
     epsilon       = 1e-15
     init_point    = [10,10] 
-
-    
     P = run_grad_des(init_point, 0.02)
-    print(P)
-
-    x_min = min(DataPoints.x)
-    x_max = max(DataPoints.x)
-    
-    x_line = [x_min + i*(x_max - x_min)/100 for i in range(101)]
-    
-    y_line = [h([1,xi], P) for xi in x_line]
-
-    plt.scatter(DataPoints.x, y, color='blue', label='Data Points')   
-    plt.plot(x_line, y_line, color='red', label='Regression Line')   
-
-    plt.xlabel("x")
-    plt.ylabel("y")
-    plt.title("Linear Regression Example")
-
-    plt.legend()
-    plt.show()
-
+    plot_pic(th_rec[0])
+    plot_pic(th_rec[1])
+    plot_pic(th_rec[2])
+    plot_pic(P) 
 if __name__ == "__main__":
     main()
 
