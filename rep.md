@@ -1,10 +1,8 @@
 # A.I. Linear regression 
 
-
+## Least Square 
 
 ## Linear regression with Gradient Descent
-
-## Model and Cost Function
 
 We define the hypothesis function as
 $$
@@ -57,3 +55,12 @@ Here are the regression lines after the first, second, and third iterations, as 
 ![image-20251019155544994](/Users/webhahn/Library/Application Support/typora-user-images/image-20251019155544994.png)
 
 ![image-20251019155556305](/Users/webhahn/Library/Application Support/typora-user-images/image-20251019155556305.png)
+
+Here is the picture for the cost:
+
+![image-20251019161317188](/Users/webhahn/Library/Application Support/typora-user-images/image-20251019161317188.png)
+
+
+
+## A.II. Poly regression 
+
