@@ -14,7 +14,7 @@ def cost_func(th):
     result = 0 
     for i in range(0, sample_number):
         result += (h(sample_x[i],th) - sample_y[i]) * (h(sample_x[i],th) - sample_y[i])
-    return 1/2 * result
+    return 1/(2 * sample_number) * result
 
 # Take the derivative of J(cost_func) with theta_i.
 # In our situation, i is in the set {0,1}.
@@ -23,7 +23,7 @@ def take_p_deriv(point, i):
    p_deriv = 0
    for j in range(0, sample_number):
        p_deriv += (h(sample_x[j],point) - sample_y[j]) * sample_x[j][i]
-   return p_deriv
+   return (1/(2 * sample_number)) * p_deriv
 
 def take_grad(point):
     assert len(point) == len(sample_x[0]) 
@@ -119,7 +119,7 @@ def main():
     
     epsilon       = 1e-15
     init_point    = [10,10] 
-    P = run_grad_des(init_point, 0.02)
+    P = run_grad_des(init_point, 0.9)
     plot_pic(th_rec[0])
     plot_pic(th_rec[1])
     plot_pic(th_rec[2])
