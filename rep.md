@@ -2,6 +2,8 @@
 
 ## Least Square 
 
+
+
 ## Linear regression with Gradient Descent
 
 We define the hypothesis function as
@@ -48,17 +50,17 @@ We started with $(\theta_0, \theta_1) = (10, 10)$ and a learning rate of 0.9; af
 
 Here are the regression lines after the first, second, and third iterations, as well as the final converged line:
 
-![image-20251019155507076](/Users/webhahn/Library/Application Support/typora-user-images/image-20251019155507076.png)
+![image-20251019155507076](./assets/image-20251019155507076.png)
 
-![image-20251019155534375](/Users/webhahn/Library/Application Support/typora-user-images/image-20251019155534375.png)
+![image-20251019155534375](./assets/image-20251019155534375.png)
 
-![image-20251019155544994](/Users/webhahn/Library/Application Support/typora-user-images/image-20251019155544994.png)
+![image-20251019155544994](./assets/image-20251019155544994.png)
 
-![image-20251019155556305](/Users/webhahn/Library/Application Support/typora-user-images/image-20251019155556305.png)
+![image-20251019155556305](./assets/image-20251019155556305.png)
 
 Here is the picture for the cost:
 
-![image-20251019161317188](/Users/webhahn/Library/Application Support/typora-user-images/image-20251019161317188.png)
+![image-20251019161317188](./assets/image-20251019161317188.png)
 
 
 
