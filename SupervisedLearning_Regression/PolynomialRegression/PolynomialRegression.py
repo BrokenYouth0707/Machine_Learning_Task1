@@ -1,9 +1,11 @@
 import numpy as np
-import DataPoints as dp
 from typing import Tuple, List, Optional
 import matplotlib.pyplot as plt
 import os
+import sys
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'LeastSquares')))
+import DataPoints as dp
 
 # Data inverse transformation
 def zscore_inverse(arr_t: np.ndarray, params: Tuple[float, float]) -> np.ndarray:
@@ -91,9 +93,9 @@ def plot_fit_progress(x_raw: np.ndarray, y_raw: np.ndarray,
 
         plt.figure()
         # Plot raw data points
-        plt.scatter(x_raw, y_raw, s=18, label="data")
+        plt.scatter(x_raw, y_raw, s=18, label="data", color='blue')
         # Plot the polynomial fit
-        plt.plot(x_grid, y_hat, linewidth=2, label=f"fit at iter {it}")
+        plt.plot(x_grid, y_hat, linewidth=2, label=f"fit at iter {it}", color='black', linestyle='--')
         plt.xlabel("Temperature (X)")
         plt.ylabel("Net hourly electrical energy output (Y)")
         plt.title(f"Polynomial regression fit (iteration {it})")
@@ -133,7 +135,7 @@ def main():
     x_raw, y_raw = dp.a, dp.b
 
     # transformed data
-    x_t, y_t = dp.x_arr, dp.y_arr
+    x_t, y_t = dp.x, dp.y
 
     # Run gradient descent
     theta_final, costs, snaps = gradient_descent(
