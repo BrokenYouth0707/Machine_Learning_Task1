@@ -1,0 +1,15 @@
+Why these two datasets (and how they pair with your three models)
+Olivetti Faces (real-world, images)
+What it is: 400 face images (64×64 → 4096-D).
+Why good: High-dimensional, small-n data that benefits from PCA; a realistic testbed for image embeddings.
+Model fit:
+HDBSCAN: after PCA (e.g., 100–200 dims), can find identity clusters and label outliers; min_cluster_size controls strictness.
+OPTICS: density ordering shows structure; works reasonably on PCA features.
+Spectral: with affinity='nearest_neighbors' often recovers ~40 clusters (subjects) on PCA features; great illustration of non-linear separations.
+Two Moons (generated, 2D, non-convex)
+What it is: Classic synthetic dataset of two interleaved crescents with noise.
+Why good: Crystal-clear demonstration of non-convex structure and neighborhood preservation; fast to iterate and easy to visualize.
+Model fit:
+HDBSCAN / OPTICS: naturally capture the curved clusters and can mark noisy points as -1.
+Spectral: excels by using a k-NN graph; set n_clusters=2 and it separates the moons cleanly.
+Net effect: you get one real-world, high-D dataset (Olivetti) to test PCA + clustering, and one generated, low-D dataset (Moons) to clearly show the strengths of density/spectral methods on non-convex shapes. That gives you both pedagogical clarity and practical relevance.
