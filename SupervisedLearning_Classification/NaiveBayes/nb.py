@@ -60,15 +60,15 @@ def plot_decision_boundary_with_hits(clf, X_train, y_train, X_test=None, y_test=
 
     y_pred_train = clf.predict(Xt)
     ok_tr = (y_pred_train == yt)
-    plt.scatter(Xt[ok_tr, 0],  Xt[ok_tr, 1],  marker='o',  s=28, edgecolors='k', linewidths=0.6, label='train ✓', alpha=0.9)
-    plt.scatter(Xt[~ok_tr, 0], Xt[~ok_tr, 1], marker='x',  s=48,                 linewidths=1.2, label='train ✗')
+    plt.scatter(Xt[ok_tr, 0],  Xt[ok_tr, 1],  marker='o',  s=28, edgecolors='k', linewidths=0.6, label='train T', alpha=0.9)
+    plt.scatter(Xt[~ok_tr, 0], Xt[~ok_tr, 1], marker='x',  s=48,                 linewidths=1.2, label='train F')
 
 
     if Xv is not None and yv is not None:
         y_pred_test = clf.predict(Xv)
         ok_te = (y_pred_test == yv)
-        plt.scatter(Xv[ok_te, 0],  Xv[ok_te, 1],  marker='^', s=36, edgecolors='k', linewidths=0.6, label='test ✓', alpha=0.9)
-        plt.scatter(Xv[~ok_te, 0], Xv[~ok_te, 1], marker='v', s=36, edgecolors='k', linewidths=0.6, label='test ✗', alpha=0.9)
+        plt.scatter(Xv[ok_te, 0],  Xv[ok_te, 1],  marker='^', s=36, edgecolors='k', linewidths=0.6, label='test T', alpha=0.9)
+        plt.scatter(Xv[~ok_te, 0], Xv[~ok_te, 1], marker='v', s=36, edgecolors='k', linewidths=0.6, label='test F', alpha=0.9)
 
     plt.xlabel("x1"); plt.ylabel("x2")
     plt.title(title)
