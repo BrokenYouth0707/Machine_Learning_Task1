@@ -1,0 +1,81 @@
+CI.1
+  UL task: Clustering
+    Motivation: The goal of clustering is to group data samples into clusters such that samples within the same cluster are more similar to each other than to those in different clusters. This task is suitable for exploring the intrinsic structure of unlabeled data and identifying natural groupings or patterns within it.
+
+  Metrics:
+    1. Silhouette Coefficient: It measures how similar each sample is to its own cluster compared to other clusters, based solely on distance information. It ranges from −1 to 1, where higher values indicate that samples are well matched to their own cluster and poorly matched to neighboring clusters.
+      Motivation: This metric is unsupervised, which means it does not require ground-truth labels, making it suitable for internal evaluation when only feature similarity is known. It helps quantify cluster compactness and separation.
+
+    2. Adjusted Rand Index (ARI): It compares the clustering assignments with ground-truth labels, adjusting for chance. It evaluates how consistent the predicted clusters are with the true categories, ranging from −1 (poor agreement) to 1 (perfect match). 0 means the clustering result is random.
+      Motivation: This metric is supervised, which means it can be used when reference labels are available. It provides an objective measure of clustering accuracy.
+
+
+CI.3 
+  Model 1: HDBSCAN
+    Motivation: HDBSCAN is an extension of the DBSCAN algorithm that combines density-based clustering with a hierarchical framework. Unlike algorithms that require a fixed number of clusters (e.g., K-means) or are sensitive to global density thresholds, HDBSCAN can automatically discover clusters of variable densities and identify noise points without manual tuning of the number of clusters.
+    Key characteristics of HDBSCAN:
+      1. No need to predefine the number of clusters
+      2. Robust to noise and outliers
+      3. Ability to handle clusters of varying density
+      4. Scalability and efficiency with complexity O(nlogn)
+
+CI.4
+  How HDBSCAN works: HDBSCAN extends the classical DBSCAN algorithm by transforming the problem of clustering into one of hierarchical density analysis.
+    Step 1 – Mutual Reachability Distance: HDBSCAN starts by defining a mutual reachability distance between each two points in the dataset.
+    ## put the Mutual Reachability Distance formula here
+    Step 2 – Minimum Spanning Tree (MST): Using these mutual reachability distances, HDBSCAN constructs a minimum spanning tree (MST) of the data points. The MST encodes the connectivity structure of the dataset in terms of density-based reachability.
+    Step 3 – Hierarchical Cluster Tree Construction: The MST is then transformed into a hierarchical cluster tree by progressively removing edges in order of decreasing mutual reachability distance (i.e., increasing density). Each edge removal may cause clusters to split into smaller subclusters. This process naturally produces a hierarchy of clusters at multiple density levels.
+    Step 4 – Condensed Tree and Cluster Stability Analysis: HDBSCAN condenses this hierarchy tree by pruning small clusters below a minimum cluster size and calculating a stability score for each cluster. This score measures how long a cluster persists across different density thresholds, and the longer the persistence, the more stable and meaningful the cluster is.
+    ## put Stability formula here
+    Step 5 – Cluster Selection via EOM (Excess of Mass): The Excess of Mass (EOM) algorithm selects the final flat clustering by maximizing total cluster stability (densest and most persistent) under the constraint that clusters do not overlap.
+
+  Optimization method: EOM is a stability-based optimization method, aiming to maximize overall cluster persistence across different density levels. This corresponds to an optimization problem of selecting clusters that maximize total stability mass (EOM). HDBSCAN optimizes cluster selection in a hierarchical density space, rather than through iterative parameter updates.
+  ## put EOM formula that maximizes the total stability here
+
+CI.5
+Results for HDBSCAN:
+Input dataset: 
+  - Data shape: (400, 4096)
+  - Number of clusters: 40
+  - Number of samples per cluster: 10
+============================================================
+Parameters:
+  - min_cluster_size: 3
+  - min_samples: 2
+Clustering Results:
+  - Number of clusters found: 68
+  - Number of clustered samples: 341 (85.25%)
+Evaluation Metrics:
+  - silhouette_score: 0.2305
+  - adjusted_rand_score: 0.3957
+============================================================
+Parameters:
+  - min_cluster_size: 5
+  - min_samples: 2
+Clustering Results:
+  - Number of clusters found: 39
+  - Number of clustered samples: 293 (73.25%)
+Evaluation Metrics:
+  - silhouette_score: 0.1982
+  - adjusted_rand_score: 0.2508
+============================================================
+Parameters:
+  - min_cluster_size: 5
+  - min_samples: 3
+Clustering Results:
+  - Number of clusters found: 30
+  - Number of clustered samples: 236 (59.00%)
+Evaluation Metrics:
+  - silhouette_score: 0.2259
+  - adjusted_rand_score: 0.1201
+
+We applied HDBSCAN on the Olivetti Faces dataset (400 samples, 40 ground-truth subjects) to study how its clustering behavior changes with different hyperparameters.
+Overall, HDBSCAN produced varying results depending on its density parameters. Smaller min_cluster_size values (e.g., 3) yielded more clusters and higher ARI (≈0.40), while larger values produced fewer, more stable clusters but lower coverage and ARI. Silhouette scores (≈0.2) remained moderate, suggesting reasonable but imperfect separation in the high-dimensional facial feature space. The ARI <0.4 indicates that purely density-based methods still struggle with high-dimensional, facial image data.
+
+We tried to use PCA to reduce the dimension of the raw data and extract features. However, the clustering performance did not improve: both Silhouette and ARI scores remained similar to or worse than those obtained from the raw data. This outcome suggests that PCA failed to capture the semantic features necessary for distinguishing different identities. As a linear method, PCA preserves global variance but not the non-linear manifold structure of facial images. Consequently, the resulting lower-dimensional representation does not provide a more meaningful structure for density-based clustering methods such as HDBSCAN
+
+CI.6
+In summary, the results suggest that density-based clustering methods, such as HDBSCAN, are not well-suited for raw, high-dimensional facial image data. The pixel space of face images lacks distinct density boundaries and exhibits strong non-linear and continuous variations, which violate the core assumptions of density-based clustering.
+To make HDBSCAN more effective for this type of data, it is necessary to first obtain a more meaningful representation through non-linear dimensionality reduction or deep feature extraction. These approaches can transform the original pixel data into a lower-dimensional manifold where samples from the same identity are closer together, thereby providing a feature space that better reflects semantic similarity and allows HDBSCAN to form more coherent clusters.
+
+
