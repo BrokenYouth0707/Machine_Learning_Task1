@@ -1,24 +1,31 @@
 """
-Multi-Layer Perceptron (MLP) Implementation
+Multi-Layer Perceptron (MLP) Implementation - Column Vector Convention
 Architecture:
 - Input Layer: 2 neurons (x)
 - Hidden Layer 0: 10 neurons (h0)
 - Hidden Layer 1: 10 neurons (h1)
 - Output Layer: 2 neurons (o)
+
+This implementation uses COLUMN VECTOR CONVENTION where:
+- Input: X shape (n_features, n_samples) - each column is a sample
+- Weights: W shape (n_out, n_in) - transposed compared to row convention
+- Forward: z = W @ x + b
+- Backward: delta = W.T @ delta_next
 """
 
 import numpy as np
 
 
-class MLP:
+class MLP_Column:
     """
-    MLP with customizable architecture for forward and backward propagation.
+    MLP with Column Vector Convention for forward and backward propagation.
+    Each column represents one sample (traditional mathematical notation).
     """
     
     def __init__(self, input_size=2, hidden_sizes=[10, 10], output_size=2, 
                  learning_rate=0.01, activation='sigmoid'):
         """
-        Initialize the MLP network.
+        Initialize the MLP network with column vector convention.
         
         Parameters:
         -----------
@@ -41,55 +48,58 @@ class MLP:
         
         #########################################################
         ###### Initialize weights and biases for each layer #####
+        # Note: Weights are (n_out, n_in) in column convention
         self.weights = []
         self.biases = []
         
         # Input to first hidden layer
-        # (input_size, hidden_sizes[0]) matrix for weights initialized with small random values
-        self.weights.append(np.random.randn(input_size, hidden_sizes[0]) * 0.1)
-        # (1, hidden_sizes[0]) matrix for biases initialized with zeros
-        self.biases.append(np.zeros((1, hidden_sizes[0])))
+        # (hidden_sizes[0], input_size) - note the order is REVERSED from row convention
+        self.weights.append(np.random.randn(hidden_sizes[0], input_size) * 0.1)
+        # (hidden_sizes[0], 1) - column vector for biases
+        self.biases.append(np.zeros((hidden_sizes[0], 1)))
         
         # Hidden layers
         for i in range(len(hidden_sizes) - 1):
-            # (hidden_sizes[i], hidden_sizes[i+1]) matrix for weights
-            self.weights.append(np.random.randn(hidden_sizes[i], hidden_sizes[i+1]) * 0.1)
-            # (1, hidden_sizes[i+1]) matrix for biases
-            self.biases.append(np.zeros((1, hidden_sizes[i+1])))
+            # (hidden_sizes[i+1], hidden_sizes[i])
+            self.weights.append(np.random.randn(hidden_sizes[i+1], hidden_sizes[i]) * 0.1)
+            # (hidden_sizes[i+1], 1)
+            self.biases.append(np.zeros((hidden_sizes[i+1], 1)))
         
         # Last hidden layer to output
-        self.weights.append(np.random.randn(hidden_sizes[-1], output_size) * 0.1)
-        self.biases.append(np.zeros((1, output_size)))
+        # (output_size, hidden_sizes[-1])
+        self.weights.append(np.random.randn(output_size, hidden_sizes[-1]) * 0.1)
+        # (output_size, 1)
+        self.biases.append(np.zeros((output_size, 1)))
         
         # Storage for activations and pre-activations (for backpropagation)
         self.z_values = []  # Pre-activation values
         self.activations = []  # Post-activation values
     
-    # Sigmoid activation function.
     def sigmoid(self, x):
+        """Sigmoid activation function."""
         return 1 / (1 + np.exp(-np.clip(x, -500, 500)))
 
-    # Derivative of sigmoid function.
     def sigmoid_derivative(self, x):
+        """Derivative of sigmoid function."""
         s = self.sigmoid(x)
         return s * (1 - s)
     
-    # ReLU activation function.
     def relu(self, x):
+        """ReLU activation function."""
         return np.maximum(0, x)
     
-    # Derivative of ReLU function.
     def relu_derivative(self, x):
+        """Derivative of ReLU function."""
         return (x > 0).astype(float)
     
-    # Softmax activation function for output layer.
     def softmax(self, x):
-        # subtract max to prevent overflow of exp
-        exp_x = np.exp(x - np.max(x, axis=1, keepdims=True))
-        return exp_x / np.sum(exp_x, axis=1, keepdims=True)
+        """Softmax activation function for output layer (column-wise)."""
+        # Subtract max for numerical stability (column-wise)
+        exp_x = np.exp(x - np.max(x, axis=0, keepdims=True))
+        return exp_x / np.sum(exp_x, axis=0, keepdims=True)
     
-    # Apply the chosen activation function.
     def activation_function(self, x):
+        """Apply the chosen activation function."""
         if self.activation_name == 'sigmoid':
             return self.sigmoid(x)
         elif self.activation_name == 'relu':
@@ -97,8 +107,8 @@ class MLP:
         else:
             raise ValueError(f"Unknown activation function: {self.activation_name}")
     
-    # Apply the derivative of the chosen activation function.
     def activation_derivative(self, x):
+        """Apply the derivative of the chosen activation function."""
         if self.activation_name == 'sigmoid':
             return self.sigmoid_derivative(x)
         elif self.activation_name == 'relu':
@@ -108,33 +118,34 @@ class MLP:
     
     def forward(self, X):
         """
-        Forward propagation through the network.
+        Forward propagation through the network (Column Convention).
         
         Parameters:
         -----------
-        X : ndarray, shape = (n_samples, input_size)
-            Input data
-
+        X : ndarray, shape = (input_size, n_samples)
+            Input data - each COLUMN is a sample
+            
         Returns:
         --------
-        output : ndarray, shape = (n_samples, output_size)
-            Network output probabilities
+        output : ndarray, shape = (output_size, n_samples)
+            Network output probabilities - each COLUMN is a sample's output
         """
-        # Storage for activations and pre-activations (for backpropagation)
-        # Pre-activation values
+        # Storage for activations and pre-activations
         self.z_values = []
-        # Post-activation values
         self.activations = [X]
         
         current_input = X
         
         # Forward through all layers except the last
         for i in range(len(self.weights) - 1):
-            # 1. For input layer to 1st hidden layer: 
-            # (n_samples, input_size) * (input_size, hidden_sizes[0]) + (1, hidden_sizes[0])
+            # Column convention: z = W @ a + b
+            # 1. For input layer to 1st hidden layer:
+            #    (hidden_sizes[0], input_size) @ (input_size, n_samples) + (hidden_sizes[0], 1)
+            #    Result: (hidden_sizes[0], n_samples)
             # 2. For ith hidden layer to (i+1)th hidden layer:
-            # (n_samples, hidden_sizes[i]) * (hidden_sizes[i], hidden_sizes[i+1]) + (1, hidden_sizes[i+1])
-            z = np.dot(current_input, self.weights[i]) + self.biases[i]
+            #    (hidden_sizes[i+1], hidden_sizes[i]) @ (hidden_sizes[i], n_samples) + (hidden_sizes[i+1], 1)
+            #    Result: (hidden_sizes[i+1], n_samples)
+            z = np.dot(self.weights[i], current_input) + self.biases[i]
             # Store pre-activation values
             self.z_values.append(z)
             
@@ -145,12 +156,13 @@ class MLP:
             # Update current input for next layer
             current_input = a
         
-        # For last hidden layer to output layer (using softmax for classification)
-        # (n_samples, hidden_size[-1]) * (hidden_size[-1], output_size) + (1, output_size)
-        z_output = np.dot(current_input, self.weights[-1]) + self.biases[-1]
+        # For last hidden layer to output layer (using softmax)
+        # (output_size, hidden_sizes[-1]) @ (hidden_sizes[-1], n_samples) + (output_size, 1)
+        # Result: (output_size, n_samples)
+        z_output = np.dot(self.weights[-1], current_input) + self.biases[-1]
         self.z_values.append(z_output)
 
-        # Apply softmax activation to get output probabilities for n_samples
+        # Apply softmax activation to get output probabilities
         output = self.softmax(z_output)
         self.activations.append(output)
         
@@ -158,53 +170,57 @@ class MLP:
     
     def backward(self, X, y, output):
         """
-        Backward propagation to compute gradients.
+        Backward propagation to compute gradients (Column Convention).
         
         Parameters:
         -----------
-        X : ndarray, shape (n_samples, input_size)
-            Input data
-        y : ndarray, shape (n_samples, output_size)
-            True labels (one-hot encoded)
-        output : ndarray, shape (n_samples, output_size)
-            Network predictions
+        X : ndarray, shape (input_size, n_samples)
+            Input data - each column is a sample
+        y : ndarray, shape (output_size, n_samples)
+            True labels (one-hot encoded) - each column is a sample
+        output : ndarray, shape (output_size, n_samples)
+            Network predictions - each column is a sample
         """
-        m = X.shape[0]  # Number of samples
+        m = X.shape[1]  # Number of samples (second dimension in column convention)
         
         # Initialize gradients
         weight_gradients = [None] * len(self.weights)
         bias_gradients = [None] * len(self.biases)
         
         # Output layer error (for softmax + cross-entropy)
-        # = Gradient of loss of output layer w.r.t. "z_output"
-        # Dim : (m, output_size)
+        # = Gradient of loss w.r.t. z_output
+        # Shape: (output_size, n_samples)
         delta = output - y
         
-        # Gradient for output layer w.r.t. "weights" and "biases"
-        # dot product of activations from last hidden layer and delta
-        # (hidden_sizes[-1], m) * (m, output_size) => dot product along m samples => sum over m samples and divide by m to get mean weight gradient
-        # Dim : (hidden_sizes[-1], output_size)
-        weight_gradients[-1] = np.dot(self.activations[-2].T, delta) / m
-        # (m, output_size) => sum over m samples and divide by m to get mean bias gradient
-        # Dim : (1, output_size)
-        bias_gradients[-1] = np.sum(delta, axis=0, keepdims=True) / m
+        # Gradient for output layer w.r.t. weights and biases
+        # Column convention: dL/dW = delta @ a.T
+        # (output_size, n_samples) @ (n_samples, hidden_sizes[-1])
+        # Result: (output_size, hidden_sizes[-1])
+        weight_gradients[-1] = np.dot(delta, self.activations[-2].T) / m
+        
+        # Bias gradient: average over samples (sum along columns)
+        # (output_size, n_samples) -> (output_size, 1)
+        bias_gradients[-1] = np.sum(delta, axis=1, keepdims=True) / m
         
         # Backpropagate through hidden layers
         for i in range(len(self.weights) - 2, -1, -1):
-            # Compute delta for current layer
-            # delta = (m, hidden_sizes[i+1]) * (hidden_sizes[i+1], hidden_sizes[i]) * activation_derivative(z_values[i])
-            # Dim : (m, hidden_sizes[i])
-            delta = np.dot(delta, self.weights[i + 1].T) * self.activation_derivative(self.z_values[i])
+            # Compute delta for current layer using chain rule
+            # Column convention: delta^(l) = W^(l+1).T @ delta^(l+1) ⊙ σ'(z^(l))
+            # (hidden_sizes[i], hidden_sizes[i+1]) @ (hidden_sizes[i+1], n_samples)
+            # Result: (hidden_sizes[i], n_samples)
+            delta = np.dot(self.weights[i + 1].T, delta) * self.activation_derivative(self.z_values[i])
             
-            # Gradient for current layer w.r.t. "weights" and "biases"
-            # (hidden_sizes[i], m) * (m, hidden_sizes[i]) => dot product along m samples => sum over m 
-            # Dim : (hidden_sizes[i], hidden_sizes[i+1])
-            weight_gradients[i] = np.dot(self.activations[i].T, delta) / m 
-            # (m, hidden_sizes[i]) => sum over m
-            # Dim : (1, hidden_sizes[i])
-            bias_gradients[i] = np.sum(delta, axis=0, keepdims=True) / m
+            # Gradient for current layer w.r.t. weights
+            # delta @ a.T
+            # (hidden_sizes[i], n_samples) @ (n_samples, hidden_sizes[i-1] or input_size)
+            # Result: (hidden_sizes[i], hidden_sizes[i-1] or input_size)
+            weight_gradients[i] = np.dot(delta, self.activations[i].T) / m
+            
+            # Bias gradient: average over samples
+            # (hidden_sizes[i], n_samples) -> (hidden_sizes[i], 1)
+            bias_gradients[i] = np.sum(delta, axis=1, keepdims=True) / m
         
-        # Update weights and biases
+        # Update weights and biases using gradient descent
         for i in range(len(self.weights)):
             self.weights[i] -= self.learning_rate * weight_gradients[i]
             self.biases[i] -= self.learning_rate * bias_gradients[i]
@@ -215,10 +231,10 @@ class MLP:
         
         Parameters:
         -----------
-        X : ndarray, shape (n_samples, input_size)
-            Training data
-        y : ndarray, shape (n_samples, output_size)
-            Training labels (one-hot encoded)
+        X : ndarray, shape (input_size, n_samples)
+            Training data - each column is a sample
+        y : ndarray, shape (output_size, n_samples)
+            Training labels (one-hot encoded) - each column is a sample
         epochs : int
             Number of training epochs
         verbose : bool
@@ -236,9 +252,9 @@ class MLP:
             output = self.forward(X)
             
             # Compute loss (cross-entropy)
-            # sum over classes (axis=1), mean over samples (axis=0)
-            # (output + 1e-8) to prevent log(0)
-            loss = -np.mean(np.sum(y * np.log(output + 1e-8), axis=1))
+            # Sum over features (axis=0), mean over samples (axis=1)
+            # Add 1e-8 to prevent log(0)
+            loss = -np.mean(np.sum(y * np.log(output + 1e-8), axis=0))
             losses.append(loss)
             
             # Backward pass
@@ -257,8 +273,8 @@ class MLP:
         
         Parameters:
         -----------
-        X : ndarray, shape (n_samples, input_size)
-            Input data
+        X : ndarray, shape (input_size, n_samples)
+            Input data - each column is a sample
         
         Returns:
         --------
@@ -266,8 +282,8 @@ class MLP:
             Predicted class labels
         """
         output = self.forward(X)
-        # Return the class with highest probability for each sample
-        return np.argmax(output, axis=1)
+        # Return the class with highest probability for each column
+        return np.argmax(output, axis=0)
     
     def predict_proba(self, X):
         """
@@ -275,15 +291,14 @@ class MLP:
         
         Parameters:
         -----------
-        X : ndarray, shape (n_samples, input_size)
-            Input data
+        X : ndarray, shape (input_size, n_samples)
+            Input data - each column is a sample
         
         Returns:
         --------
-        probabilities : ndarray, shape (n_samples, output_size)
-            Predicted probabilities for each class
+        probabilities : ndarray, shape (output_size, n_samples)
+            Predicted probabilities for each class - each column is a sample
         """
-        # Return the probability distributions for each sample
         return self.forward(X)
     
     def evaluate(self, X, y):
@@ -292,10 +307,10 @@ class MLP:
         
         Parameters:
         -----------
-        X : ndarray, shape (n_samples, input_size)
-            Input data
-        y : ndarray, shape (n_samples, output_size)
-            True labels (one-hot encoded)
+        X : ndarray, shape (input_size, n_samples)
+            Input data - each column is a sample
+        y : ndarray, shape (output_size, n_samples)
+            True labels (one-hot encoded) - each column is a sample
         
         Returns:
         --------
@@ -303,35 +318,36 @@ class MLP:
             Classification accuracy
         """
         predictions = self.predict(X)
-        true_labels = np.argmax(y, axis=1)
+        true_labels = np.argmax(y, axis=0)
         accuracy = np.mean(predictions == true_labels)
         return accuracy
     
     def get_network_info(self):
         """Print network architecture information."""
-        print("=" * 50)
-        print("MLP Network Architecture")
-        print("=" * 50)
+        print("=" * 60)
+        print("MLP Network Architecture (Column Vector Convention)")
+        print("=" * 60)
         print(f"Input Layer (x): {self.input_size} neurons")
         for i, size in enumerate(self.hidden_sizes):
             print(f"Hidden Layer {i} (h({i})): {size} neurons")
         print(f"Output Layer (o): {self.output_size} neurons")
-        print("=" * 50)
+        print("=" * 60)
         print(f"Activation Function: {self.activation_name}")
         print(f"Learning Rate: {self.learning_rate}")
-        print("=" * 50)
-        print("\nWeight Matrices:")
+        print("=" * 60)
+        print("\nWeight Matrices (note: n_out × n_in):")
         for i, w in enumerate(self.weights):
             print(f"W{i}: {w.shape}")
-        print("\nBias Vectors:")
+        print("\nBias Vectors (column vectors):")
         for i, b in enumerate(self.biases):
             print(f"b{i}: {b.shape}")
-        print("=" * 50)
+        print("=" * 60)
 
 
 def generate_sample_data(n_samples=1000):
     """
     Generate sample classification data for testing.
+    Returns data in COLUMN format (features × samples).
     
     Parameters:
     -----------
@@ -340,10 +356,10 @@ def generate_sample_data(n_samples=1000):
     
     Returns:
     --------
-    X : ndarray, shape (n_samples, 2)
-        Input features
-    y : ndarray, shape (n_samples, 2)
-        One-hot encoded labels
+    X : ndarray, shape (2, n_samples)
+        Input features - each COLUMN is a sample
+    y : ndarray, shape (2, n_samples)
+        One-hot encoded labels - each COLUMN is a sample
     """
     # Generate random 2D points
     np.random.seed(42)
@@ -366,30 +382,38 @@ def generate_sample_data(n_samples=1000):
     X = X[indices]
     y = y[indices]
     
+    # TRANSPOSE to column format: (features, samples)
+    X = X.T  # (2, n_samples)
+    y = y.T  # (2, n_samples)
+    
     return X, y
 
 
 if __name__ == "__main__":
-    print("Multi-Layer Perceptron Implementation\n")
+    print("Multi-Layer Perceptron Implementation")
+    print("Using Column Vector Convention\n")
     
     # Generate sample data
     print("Generating sample data...")
     X, y = generate_sample_data(n_samples=1000)
     
-    # Split into train and test sets
-    split_idx = int(0.8 * len(X))
-    X_train, X_test = X[:split_idx], X[split_idx:]
-    y_train, y_test = y[:split_idx], y[split_idx:]
+    print(f"Data format: X shape = {X.shape} (features × samples)")
+    print(f"Data format: y shape = {y.shape} (classes × samples)")
     
-    print(f"Training samples: {X_train.shape[0]}")
-    print(f"Test samples: {X_test.shape[0]}\n")
+    # Split into train and test sets
+    split_idx = int(0.8 * X.shape[1])
+    X_train, X_test = X[:, :split_idx], X[:, split_idx:]
+    y_train, y_test = y[:, :split_idx], y[:, split_idx:]
+    
+    print(f"Training samples: {X_train.shape[1]}")
+    print(f"Test samples: {X_test.shape[1]}\n")
     
     # Create and initialize MLP
-    mlp = MLP(input_size=2, 
-              hidden_sizes=[10, 10], 
-              output_size=2, 
-              learning_rate=0.1,
-              activation='sigmoid')
+    mlp = MLP_Column(input_size=2, 
+                     hidden_sizes=[10, 10], 
+                     output_size=2, 
+                     learning_rate=0.1,
+                     activation='sigmoid')
     
     # Display network architecture
     mlp.get_network_info()
@@ -405,9 +429,20 @@ if __name__ == "__main__":
     
     # Make sample predictions
     print("\nSample predictions:")
-    sample_X = np.array([[2.0, 2.0], [-2.0, -2.0], [0.0, 0.0]])
+    # Note: input must be in column format (features, samples)
+    sample_X = np.array([[2.0, -2.0, 0.0],   # feature 1
+                         [2.0, -2.0, 0.0]])  # feature 2
     predictions = mlp.predict(sample_X)
     probabilities = mlp.predict_proba(sample_X)
     
-    for i, (x, pred, prob) in enumerate(zip(sample_X, predictions, probabilities)):
+    for i in range(sample_X.shape[1]):
+        x = sample_X[:, i]
+        pred = predictions[i]
+        prob = probabilities[:, i]
         print(f"Input: {x} -> Predicted Class: {pred}, Probabilities: {prob}")
+    
+    print("\n" + "=" * 60)
+    print("Note: This implementation uses COLUMN vector convention")
+    print("where each column represents one sample, matching")
+    print("traditional mathematical notation in textbooks.")
+    print("=" * 60)
