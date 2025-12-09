@@ -1,0 +1,30 @@
+{
+  "label": "Dataset 1",
+  "best_params": {
+    "knn__n_neighbors": 7,
+    "knn__p": 2,
+    "knn__weights": "uniform"
+  },
+  "train_accuracy": 0.9107142857142857,
+  "test_accuracy": 0.9166666666666666,
+  "confusion_matrix_train": [
+    [
+      25,
+      3
+    ],
+    [
+      2,
+      26
+    ]
+  ],
+  "confusion_matrix_test": [
+    [
+      11,
+      1
+    ],
+    [
+      1,
+      11
+    ]
+  ]
+}

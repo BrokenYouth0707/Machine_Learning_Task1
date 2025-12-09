@@ -1,0 +1,30 @@
+{
+  "label": "Dataset 2 (with outliers)",
+  "best_params": {
+    "knn__n_neighbors": 21,
+    "knn__p": 2,
+    "knn__weights": "uniform"
+  },
+  "train_accuracy": 0.8524590163934426,
+  "test_accuracy": 0.8518518518518519,
+  "confusion_matrix_train": [
+    [
+      23,
+      7
+    ],
+    [
+      2,
+      29
+    ]
+  ],
+  "confusion_matrix_test": [
+    [
+      10,
+      4
+    ],
+    [
+      0,
+      13
+    ]
+  ]
+}
